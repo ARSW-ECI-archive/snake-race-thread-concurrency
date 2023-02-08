@@ -3,6 +3,9 @@ package snakepackage;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.awt.Color;
 
 import enums.Direction;
 import enums.GridSize;
@@ -10,9 +13,10 @@ import enums.GridSize;
 public class Snake extends Observable implements Runnable {
 
     private int idt;
+    private int length;
     private Cell head;
     private Cell newCell;
-    private LinkedList<Cell> snakeBody = new LinkedList<Cell>();
+    private LinkedBlockingDeque<Cell> snakeBody = new LinkedBlockingDeque<Cell>();
     //private Cell objective = null;
     private Cell start = null;
 
@@ -26,12 +30,39 @@ public class Snake extends Observable implements Runnable {
     private boolean isSelected = false;
     private int growing = 0;
     public boolean goal = false;
+    private static boolean shouldStop = false;
+
+    private Color headColor, bodyColor;
 
     public Snake(int idt, Cell head, int direction) {
         this.idt = idt;
         this.direction = direction;
+        this.length = 3;
+        setDefaultColor();
         generateSnake(head);
+    }
 
+    public void setBestColor() {
+        headColor = new Color(215, 182, 21);
+        bodyColor = new Color(255, 215, 0);
+    }
+
+    public void setWorstColor() {
+        headColor = new Color(225, 0, 0);
+        bodyColor = new Color(255, 0, 0);
+    }
+
+    public void setDefaultColor() {
+        headColor = new Color(050, 205, 150);
+        bodyColor = new Color(034, 139, 034); 
+    }
+
+    public Color getHeadColor() {
+        return headColor;
+    }
+
+    public Color getBodyColor() {
+        return bodyColor;
     }
 
     public boolean isSnakeEnd() {
@@ -45,7 +76,6 @@ public class Snake extends Observable implements Runnable {
         growing = INIT_SIZE - 1;
     }
 
-    @Override
     public void run() {
         while (!snakeEnd) {
             
@@ -57,12 +87,25 @@ public class Snake extends Observable implements Runnable {
 
             try {
                 if (hasTurbo == true) {
-                    Thread.sleep(500 / 3);
+                    Thread.sleep(50 / 3);
                 } else {
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            if(shouldStop) {
+
+                try {
+                    SnakeApp app = SnakeApp.getApp();
+                    synchronized(app) {
+                        SnakeApp.getApp().wait();
+                    }
+                } catch(InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                
             }
 
         }
@@ -73,6 +116,7 @@ public class Snake extends Observable implements Runnable {
     }
 
     private void snakeCalc() {
+        
         head = snakeBody.peekFirst();
 
         newCell = head;
@@ -104,6 +148,11 @@ public class Snake extends Observable implements Runnable {
             System.out.println("[" + idt + "] " + "CRASHED AGAINST BARRIER "
                     + newCell.toString());
             snakeEnd=true;
+
+            if(SnakeApp.getApp().getWorstSnake() == null) {
+                SnakeApp.getApp().setWorstSnake(this);
+            }
+
         }
     }
 
@@ -190,6 +239,7 @@ public class Snake extends Observable implements Runnable {
         if (Board.gameboard[newCell.getX()][newCell.getY()].isFood()) {
             // eat food
             growing += 3;
+            length += 3;
             int x = random.nextInt(GridSize.GRID_HEIGHT);
             int y = random.nextInt(GridSize.GRID_WIDTH);
 
@@ -255,7 +305,7 @@ public class Snake extends Observable implements Runnable {
                 randomMovement(newCell);
             }
         }
-
+        
         switch (direction) {
             case Direction.UP:
                 newCell = Board.gameboard[head.getX()][head.getY() - 1];
@@ -321,13 +371,21 @@ public class Snake extends Observable implements Runnable {
         }
     }
 
+    public static void doStop() {
+        shouldStop = true;
+    }
+
+    public static void doResume() {
+        shouldStop = false;
+    }
+
     /*public void setObjective(Cell c) {
         System.out.println("Setting objective - " + c.getX() + ":" + c.getY()
                 + " for Snake" + this.idt);
         this.objective = c;
     }*/
 
-    public LinkedList<Cell> getBody() {
+    public LinkedBlockingDeque<Cell> getBody() {
         return this.snakeBody;
     }
 
@@ -341,6 +399,10 @@ public class Snake extends Observable implements Runnable {
 
     public int getIdt() {
         return idt;
+    }
+
+    public int getLength() {
+        return length;
     }
 
 }

@@ -75,7 +75,6 @@ public class Board extends JLabel implements Observer {
 				//System.out.println(" ins " + gameboard[i][j]);
 			}
 		}
-
 	}
 
 	private void GenerateBarriers() {
@@ -117,7 +116,7 @@ public class Board extends JLabel implements Observer {
 
 	private void drawTurboBoosts(Graphics g) {
 		Image light = null;
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/lightning.png");
+                InputStream resource=getClass().getClassLoader().getResourceAsStream("Img/lightning.png");
 		try {
 			light = ImageIO.read(resource);
 		} catch (IOException e) {
@@ -132,7 +131,7 @@ public class Board extends JLabel implements Observer {
 	private void drawJumpPads(Graphics g) {
 		Image jump = null;
                 
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/up.png");
+                InputStream resource=getClass().getClassLoader().getResourceAsStream("Img/up.png");
 
                 try {
 			jump = ImageIO.read(resource);
@@ -149,7 +148,7 @@ public class Board extends JLabel implements Observer {
 
 		Image firewall = null;
                 
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/firewall.png");
+                InputStream resource=getClass().getClassLoader().getResourceAsStream("Img/firewall.png");
 
                 try {
 			firewall = ImageIO.read(resource);
@@ -167,8 +166,8 @@ public class Board extends JLabel implements Observer {
 
 	private void drawFood(Graphics g) {
 		Image mouse = null;
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/mouse.png");
-		
+                InputStream resource=getClass().getClassLoader().getResourceAsStream("Img/mouse.png");
+
 		try {
 			mouse = ImageIO.read(resource);
 		} catch (IOException e) {
@@ -182,23 +181,26 @@ public class Board extends JLabel implements Observer {
 	}
 
 	private void drawSnake(Graphics g) {
+
 		for (int i = 0; i != SnakeApp.MAX_THREADS; i++) {
+
 			for (Cell p : SnakeApp.getApp().snakes[i].getBody()) {
 				if (p.equals(SnakeApp.getApp().snakes[i].getBody().peekFirst())) {
-					g.setColor(new Color(050+(i*10), 205, 150));
+					g.setColor(SnakeApp.getApp().snakes[i].getHeadColor());
 					g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
 							* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
 							GridSize.HEIGH_BOX);
 				} else {
 					if (SnakeApp.getApp().snakes[i].isSelected()) {
-						g.setColor(new Color(032, 178, 170));
+						g.setColor(new Color(032, 178, 220));
 					} else
-						g.setColor(new Color(034, 139, 034));
+						g.setColor(SnakeApp.getApp().snakes[i].getBodyColor());
 					g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
 							* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
 							GridSize.HEIGH_BOX);
 				}
 			}
+
 		}
 
 	}
@@ -221,7 +223,7 @@ public class Board extends JLabel implements Observer {
 
 	}
 
-	@Override
+
 	public void update(Observable arg0, Object arg1) {
 		repaint();
 	}
